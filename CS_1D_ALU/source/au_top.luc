@@ -1,0 +1,96 @@
+module au_top (
+    input clk,              // 100MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input usb_rx,           // USB->Serial input
+    output usb_tx,          // USB->Serial output
+    output io_led [3][8],   // LEDs on IO Shield
+    output io_seg [8],      // 7-segment LEDs on IO Shield
+    output io_sel [4],      // Digit select on IO Shield
+    input io_button [5],    // 5 buttons on IO Shield
+    input io_dip [3][8]     // DIP switches on IO Shield
+  ) {
+  
+  sig rst;                  // reset signal
+  boole bool;
+  shift shif;
+  arithmetic arith;
+  compare comp;
+  arithmetic comparith;
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+    store16 storA;
+    store16 storB;
+    store16 storC;
+  }
+  
+  sig alufn[6];
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+    
+    usb_tx = usb_rx;        // loop serial port
+    
+    led = 8h00;             // turn LEDs off
+    
+    io_led = 3x{{8h00}};    // turn LEDs off
+    io_seg = 8hff;          // turn segments off
+    io_sel = 4hf;           // select no digits
+    
+    alufn = io_dip[2][5:0];
+    
+    storA.rst = rst;
+    storB.rst = rst;
+    storC.rst = rst;
+    storA.stcom = io_button[3];
+    storB.stcom = io_button[4];
+    storC.stcom = io_button[1];
+    storA.inp = c{io_dip[1][7:0], io_dip[0][7:0]};
+    storB.inp = c{io_dip[1][7:0], io_dip[0][7:0]};
+    storC.inp = 16b0;
+    bool.a = storA.out;
+    bool.b = storB.out;
+    bool.alufn = alufn;
+    shif.a = storA.out;
+    shif.b = storB.out[3:0];
+    shif.alufn = alufn;
+    arith.a = storA.out;
+    arith.b = storB.out;
+    arith.alufn = alufn;
+    comparith.a = storA.out;
+    comparith.b = storB.out;
+    comparith.alufn = 6b000001;
+    comp.v = comparith.v;
+    comp.z = comparith.z;
+    comp.n = comparith.n;
+    comp.alufn = alufn;
+    
+    case(alufn[5]) {
+      b0:
+        case(alufn[4]) {
+          b0: // add
+            storC.inp = arith.op;
+            io_led[1][7:0] = storC.out[15:8];
+            io_led[0][7:0] = storC.out[7:0];
+          b1: // boole
+            storC.inp = bool.c;
+            io_led[1][7:0] = storC.out[15:8];
+            io_led[0][7:0] = storC.out[7:0];
+        }
+      b1:
+        case(alufn[4]) {
+          b0: // shift
+            storC.inp = shif.c;
+            io_led[1][7:0] = storC.out[15:8];
+            io_led[0][7:0] = storC.out[7:0];
+          b1: // cmp
+            storC.inp = comp.cmp;
+            io_led[1][7:0] = storC.out[15:8];
+            io_led[0][7:0] = storC.out[7:0];
+        }
+    }
+    
+  }
+}

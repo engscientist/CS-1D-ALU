@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="CS_1D_ALU" board="Alchitry Au" language="Lucid" version="3">
+  <files>
+    <src>store16.luc</src>
+    <src>compare.luc</src>
+    <src>arithmetic.luc</src>
+    <src>store5.luc</src>
+    <src>shift.luc</src>
+    <src top="true">au_top.luc</src>
+    <component>reset_conditioner.luc</component>
+    <src>boole.luc</src>
+    <constraint lib="true">alchitry.acf</constraint>
+    <constraint lib="true">io.acf</constraint>
+    <constraint lib="true">au.xdc</constraint>
+  </files>
+</project>

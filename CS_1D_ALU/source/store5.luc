@@ -1,0 +1,16 @@
+module store5 (
+    input clk,  // clock
+    input rst,  // reset
+    input stcom, // store command
+    input inp[5], // input to store
+    output out[5]
+  ) {
+  // This module is used to store 5-bits of data.
+  dff register_1[5](#INIT(0), .clk(clk), .rst(rst));
+  always {
+    if (stcom) {
+      register_1.d = inp;
+      }
+    out = register_1.q;
+  }
+}

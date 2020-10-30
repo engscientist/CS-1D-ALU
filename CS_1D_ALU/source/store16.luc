@@ -1,0 +1,16 @@
+module store16 (
+    input clk,  // clock
+    input rst,  // reset
+    input stcom, // store command
+    input inp[16], // input to store
+    output out[16]
+  ) {
+  // This module is used to store 16-bits of data.
+  dff register_1[16](#INIT(0), .clk(clk), .rst(rst));
+  always {
+    if (stcom) {
+      register_1.d = inp;
+      }
+    out = register_1.q;
+  }
+}
